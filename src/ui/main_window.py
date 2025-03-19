@@ -46,6 +46,7 @@ class MainWindow(BaseWindow):
     def closeEvent(self, event):
         """
         Close the application when the main window is closed.
+        This happens when the user presses the close button or Alt+F4
         """
         self.closeApp.emit()
 
@@ -54,7 +55,14 @@ class MainWindow(BaseWindow):
         Emit the startListening signal when the start button is pressed.
         """
         self.startListening.emit()
-        self.hide()
+        self.hide()  # Hide the window, but keep the app running in the tray
+
+    def handleMinimizeButton(self):
+        """
+        Override the minimize button behavior.
+        When the minimize button is pressed, hide the window and keep the app running in the tray.
+        """
+        self.hide()  # Hide the window instead of minimizing it
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

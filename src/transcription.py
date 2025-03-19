@@ -1,11 +1,37 @@
 import io
 import os
+import re
 import numpy as np
 import soundfile as sf
+import subprocess  # Added for launching Edge browser
 from faster_whisper import WhisperModel
 from openai import OpenAI
 
 from utils import ConfigManager
+
+# Dictionary mapping command names to their handler functions
+COMMAND_HANDLERS = {}
+
+def register_command(command_phrase):
+    """
+    Decorator to register command handlers.
+    Usage: @register_command("command phrase")
+    """
+    def decorator(func):
+        COMMAND_HANDLERS[command_phrase] = func
+        return func
+    return decorator
+
+def sanitize_text(text):
+    """
+    Sanitize text for command detection by removing punctuation, 
+    converting to lowercase, and normalizing whitespace.
+    """
+    # Remove punctuation and convert to lowercase
+    sanitized = re.sub(r'[^\w\s]', ' ', text.lower())
+    # Normalize whitespace
+    sanitized = ' '.join(sanitized.split())
+    return sanitized
 
 def create_local_model():
     """
@@ -88,11 +114,53 @@ def transcribe_api(audio_data):
     )
     return response.text
 
+# Command handler registration
+@register_command("wiz open edge")
+def handle_open_edge(transcription):
+    """
+    Opens Microsoft Edge and brings it to the foreground.
+    """
+    ConfigManager.console_print("Command detected: Opening Microsoft Edge")
+    try:
+        # Open Edge and force it to the foreground with /WAIT
+        # The /WAIT parameter forces the command to wait for Edge to open before continuing
+        subprocess.Popen('start /WAIT microsoft-edge:', shell=True)
+        
+        # Find and remove the command from the original text
+        pattern = re.compile(r'wiz\s+open\s+edge', re.IGNORECASE)
+        modified_text = pattern.sub('', transcription)
+        
+        return True, modified_text.strip()
+    except Exception as e:
+        ConfigManager.console_print(f"Error executing 'open edge' command: {e}")
+        return False, transcription
+
+def execute_commands(transcription):
+    """
+    Process the transcription text to detect and execute any commands.
+    Returns: (bool, str) - (command_executed, modified_transcription)
+    """
+    # First sanitize the transcription for command detection
+    sanitized = sanitize_text(transcription)
+    
+    # Check for all registered commands
+    for command_phrase, handler_func in COMMAND_HANDLERS.items():
+        if command_phrase in sanitized:
+            # Command found, execute its handler
+            return handler_func(transcription)
+    
+    # No commands were detected
+    return False, transcription
+
 def post_process_transcription(transcription):
     """
     Apply post-processing to the transcription.
     """
     transcription = transcription.strip()
+    
+    # Execute any commands in the transcription
+    command_executed, transcription = execute_commands(transcription)
+    
     post_processing = ConfigManager.get_config_section('post_processing')
     if post_processing['remove_trailing_period'] and transcription.endswith('.'):
         transcription = transcription[:-1]
@@ -116,4 +184,3 @@ def transcribe(audio_data, local_model=None):
         transcription = transcribe_local(audio_data, local_model)
 
     return post_process_transcription(transcription)
-

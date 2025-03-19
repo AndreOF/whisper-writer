@@ -3,9 +3,11 @@ import sys
 from dotenv import set_key, load_dotenv
 from PyQt5.QtWidgets import (
     QApplication, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QCheckBox,
-    QMessageBox, QTabWidget, QWidget, QSizePolicy, QSpacerItem, QToolButton, QStyle, QFileDialog
+    QMessageBox, QTabWidget, QWidget, QSizePolicy, QSpacerItem, QToolButton, QStyle, QFileDialog,
+    QSystemTrayIcon
 )
 from PyQt5.QtCore import Qt, QCoreApplication, QProcess, pyqtSignal
+from PyQt5.QtGui import QIcon
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ui.base_window import BaseWindow
@@ -22,6 +24,9 @@ class SettingsWindow(BaseWindow):
         super().__init__('Settings', 700, 700)
         self.schema = ConfigManager.get_schema()
         self.init_settings_ui()
+        
+        # Set window flags to ensure it can be completely hidden from taskbar
+        self.setWindowFlags(self.windowFlags() | Qt.Tool)
 
     def init_settings_ui(self):
         """Initialize the settings user interface."""
@@ -36,6 +41,14 @@ class SettingsWindow(BaseWindow):
         if self.use_api_checkbox:
             self.use_api_checkbox.stateChanged.connect(lambda: self.toggle_api_local_options(self.use_api_checkbox.isChecked()))
             self.toggle_api_local_options(self.use_api_checkbox.isChecked())
+
+    def changeEvent(self, event):
+        """Handle window state changes."""
+        if event.type() == event.WindowStateChange:
+            if self.windowState() == Qt.WindowMinimized:
+                self.hide()  # Hide from taskbar instead of minimizing
+                event.accept()
+        super().changeEvent(event)
 
     def create_tabs(self):
         """Create tabs for each category in the schema."""

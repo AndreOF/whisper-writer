@@ -130,3 +130,6 @@ dmypy.json
 
 # Configuration files
 config.yaml
+/venv_py311
+/.env
+/backup

@@ -37,11 +37,27 @@ class BaseWindow(QMainWindow):
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setStyleSheet("color: #404040;")
 
-        # Create a widget for the close button
-        close_button_widget = QWidget()
-        close_button_layout = QHBoxLayout(close_button_widget)
-        close_button_layout.setContentsMargins(0, 0, 0, 0)
+        # Create a widget for the buttons
+        buttons_widget = QWidget()
+        buttons_layout = QHBoxLayout(buttons_widget)
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
 
+        # Add minimize button
+        minimize_button = QPushButton('−')
+        minimize_button.setFixedSize(25, 25)
+        minimize_button.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                color: #404040;
+            }
+            QPushButton:hover {
+                color: #000000;
+            }
+        """)
+        minimize_button.clicked.connect(self.handleMinimizeButton)
+
+        # Add close button
         close_button = QPushButton('×')
         close_button.setFixedSize(25, 25)
         close_button.setStyleSheet("""
@@ -56,12 +72,14 @@ class BaseWindow(QMainWindow):
         """)
         close_button.clicked.connect(self.handleCloseButton)
 
-        close_button_layout.addWidget(close_button, alignment=Qt.AlignRight)
+        # Add buttons to the buttons layout
+        buttons_layout.addWidget(minimize_button, alignment=Qt.AlignRight)
+        buttons_layout.addWidget(close_button, alignment=Qt.AlignRight)
 
         # Add widgets to the title bar layout
         title_bar_layout.addWidget(QWidget(), 1)  # Left spacer
         title_bar_layout.addWidget(title_label, 3)  # Title (with more width)
-        title_bar_layout.addWidget(close_button_widget, 1)  # Close button
+        title_bar_layout.addWidget(buttons_widget, 1)  # Buttons
 
         self.main_layout.addWidget(title_bar)
         self.setCentralWidget(self.main_widget)
@@ -74,6 +92,13 @@ class BaseWindow(QMainWindow):
         frame_geometry = self.frameGeometry()
         frame_geometry.moveCenter(center_point)
         self.move(frame_geometry.topLeft())
+
+    def handleMinimizeButton(self):
+        """
+        Minimize the window.
+        This method should be overridden by subclasses if they need custom behavior.
+        """
+        self.showMinimized()
 
     def handleCloseButton(self):
         """
