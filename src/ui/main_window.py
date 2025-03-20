@@ -50,6 +50,18 @@ class MainWindow(BaseWindow):
         """
         self.closeApp.emit()
 
+    def handleMinimizeButton(self):
+        """
+        Minimize the window to taskbar.
+        """
+        self.showMinimized()
+
+    def handleCloseButton(self):
+        """
+        Hide the window to system tray.
+        """
+        self.hide()
+
     def startPressed(self):
         """
         Emit the startListening signal when the start button is pressed.
@@ -57,12 +69,6 @@ class MainWindow(BaseWindow):
         self.startListening.emit()
         self.hide()  # Hide the window, but keep the app running in the tray
 
-    def handleMinimizeButton(self):
-        """
-        Override the minimize button behavior.
-        When the minimize button is pressed, hide the window and keep the app running in the tray.
-        """
-        self.hide()  # Hide the window instead of minimizing it
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

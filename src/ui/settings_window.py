@@ -25,8 +25,8 @@ class SettingsWindow(BaseWindow):
         self.schema = ConfigManager.get_schema()
         self.init_settings_ui()
         
-        # Set window flags to ensure it can be completely hidden from taskbar
-        self.setWindowFlags(self.windowFlags() | Qt.Tool)
+        # Remove Qt.Tool flag to allow window to minimize to taskbar
+        self.setWindowFlags(self.windowFlags() & ~Qt.Tool)
 
     def init_settings_ui(self):
         """Initialize the settings user interface."""
@@ -46,8 +46,7 @@ class SettingsWindow(BaseWindow):
         """Handle window state changes."""
         if event.type() == event.WindowStateChange:
             if self.windowState() == Qt.WindowMinimized:
-                self.hide()  # Hide from taskbar instead of minimizing
-                event.accept()
+                event.accept()  # Allow normal minimization behavior
         super().changeEvent(event)
 
     def create_tabs(self):
