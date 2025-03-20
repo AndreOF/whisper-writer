@@ -294,19 +294,8 @@ class SettingsWindow(BaseWindow):
                             func(widget, category, sub_category, key, meta)
 
     def closeEvent(self, event):
-        """Confirm before closing the settings window without saving."""
-        reply = QMessageBox.question(
-            self,
-            'Close without saving?',
-            'Are you sure you want to close without saving?',
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
-
-        if reply == QMessageBox.Yes:
-            ConfigManager.reload_config()  # Revert to last saved configuration
-            self.update_widgets_from_config()
-            self.settings_closed.emit()
-            super().closeEvent(event)
-        else:
-            event.ignore()
+        """Close the settings window directly without confirmation."""
+        ConfigManager.reload_config()  # Revert to last saved configuration
+        self.update_widgets_from_config()
+        self.settings_closed.emit()
+        super().closeEvent(event)
